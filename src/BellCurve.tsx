@@ -1,26 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from "d3";
+import { empData } from "./assets/TestData";
 import "./assets/styles.css";
 
 function BellCurve() {
-  const [form, setFormValue] = useState({
-    mean: 20,
-    max: 100,
-    min: 0,
-    std: 5,
-  });
+   const containerRef = useRef(null);
 
-  const containerRef = useRef(null);
-
-  const handleInput = (e) => {
-    const { name, value } = e.target;
-    setFormValue((form) => ({ ...form, [name]: value }));
-  };
-
-  const handleRefresh = () => {
-    setFormValue((form) => ({ ...form }));
-  };
-
+   const min = d3.min(empData,d=>d.rating);
+   const max = d3.max(empData,d=>d.rating);
+   const mean = d3.mean(empData,d=>d.rating);
+   const stdDeviation = d3.deviation(empData,d=>d.rating);
+ 
   const getProbabilityData = (normalizedData, m, v) => {
     const data: any = [];
     for (var i = 0; i < normalizedData.length; ++i) {
@@ -64,7 +54,6 @@ function BellCurve() {
     const numberOfBuckets = 25;
     const numberOfDataPoints = 1000;
 
-    const { mean = 0, max = 0, min = 0, std: stdDeviation = 0 } = form;
 
     const normalDistributionFunction = d3.randomNormal(mean, stdDeviation);
 
@@ -169,37 +158,6 @@ function BellCurve() {
       })
       .style("{ 'stroke-width': '2px', fill: 'none' }");
 
-    const draggedMean = (event) => {
-      setFormValue((form) => ({ ...form, mean: x.invert(event.x) - 20 }));
-    }
-
-    const draggedStd = (event) => {
-      setFormValue((form) => ({ ...form, std: x.invert(event.x) }));
-    }
-
-    const dragMean = d3.drag()
-      .on("start", draggedMean)
-      .on("drag", draggedMean)
-      .on("end", draggedMean)
-    const dragStd = d3.drag().on('drag', draggedStd);
-
-    lines
-      .append('circle')
-      .attr('class', 'MeanAnchor')
-      .attr('r', 8)
-      .attr('transform', function (d) {
-        return 'translate(' + x(mean) + ',' + 0 + ')';
-      })
-      .call(dragMean as any);
-
-    lines
-      .append('circle')
-      .attr('class', 'StdAnchor')
-      .attr('r', 8)
-      .attr('transform', function (d) {
-        return 'translate(' + x(stdDeviation) + ',' + (height) + ')';
-      })
-      .call(dragStd as any);
 
     svg
       .append('g')
@@ -213,7 +171,7 @@ function BellCurve() {
 
   useEffect(() => {
     buildChart();
-  }, [form]);
+  }, []);
 
   return (
     <div className="svg">
