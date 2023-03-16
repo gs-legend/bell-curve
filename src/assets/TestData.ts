@@ -396,6 +396,6 @@ export const empData = [{
   "category": "B"
 }, {
   "empId": 100,
-  "rating": 3.4,
+  "rating": .014,
   "category": "C"
 }]
