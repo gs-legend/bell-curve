@@ -7,7 +7,7 @@ import D3Curve1 from './D3Curve1'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     {/* <BellCurve /> */}
-    <D3Curve />
-    {/* <D3Curve1 /> */}
+    {/* <D3Curve /> */}
+    <D3Curve1 />
   </React.StrictMode>,
 )
