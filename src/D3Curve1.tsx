@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { empData } from "./assets/TestData";
 import "./assets/styles.css";
-import { xorDependencies } from 'mathjs';
+import { Normal } from 'distributions';
 
 function getProbabilityData(normalizedData, m, v) {
   var data = [];
@@ -50,6 +50,14 @@ function D3Curve1() {
     const mean = d3.mean(empData.map(d => d.rating));
     const deviation = d3.deviation(empData.map(d => d.rating)) as number;
     const idealData = getProbabilityData(empData, mean, deviation);
+    const distribution = new Normal(mean, deviation);
+    // const numSamples = 10000;
+    // const samples = [];
+    // for (let i = 0; i < numSamples; i++) {
+    //   samples.push(distribution.random());
+    // }
+
+    // console.log(samples);
 
     var x = d3.scaleLinear().range([0, width]);
 
@@ -104,6 +112,7 @@ function D3Curve1() {
     let usedCount = 0;
     let index = 0;
     let prevPercent = 0;
+    let usedPercent = 0;
     const xAxisLables = [];
     grouped_data.forEach((data, key) => {
       const percent = (data.length * 100) / empData.length;
@@ -111,8 +120,8 @@ function D3Curve1() {
       let percent_idealData = idealData.slice(usedCount, usedCount + numOfElementsToSlice);
       usedCount += numOfElementsToSlice;
       xAxisLables.push(key);
-      const quantile = d3.quantile(empData.map(d => d.rating), (prevPercent + percent) / 100);
-      const prevQuantile = d3.quantile(empData.map(d => d.rating), prevPercent / 100);
+      const quantile = d3.quantile(empData.map(d => d.rating), (usedPercent + percent) / 100);
+      const prevQuantile = d3.quantile(empData.map(d => d.rating), (usedPercent + prevPercent) / 100);
       const temp1 = {
         e: "",
         p: probabilityDensityCalculation(prevQuantile, mean, deviation),
@@ -127,12 +136,13 @@ function D3Curve1() {
         c: key
       }
 
-      console.log(percent / 100, quantile, prevPercent / 100, prevQuantile, temp1, temp2)
+      console.log(percent / 100, quantile, prevPercent / 100, prevQuantile, temp1, temp2);
+      const newGroup = [...percent_idealData];
       plot
         .append('g')
         .append("path")
         .attr("class", "group")
-        .datum([temp1, ...percent_idealData, temp2])
+        .datum(newGroup)
         .attr("fill", colors[index++])
         // .attr("fill", "none")
         .attr("d", d3.area()
@@ -144,6 +154,7 @@ function D3Curve1() {
           .y1((d: any) => yNormal(d.p))
         );
       prevPercent = percent;
+      usedPercent += percent;
     });
 
     const xAxis = d3.axisBottom(x);
