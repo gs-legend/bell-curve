@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { empData } from "./assets/TestData";
 import "./assets/styles.css";
-import { Normal } from 'distributions';
 
 function getProbabilityData(normalizedData, m, v) {
   var data = [];
@@ -46,21 +45,14 @@ function D3Curve1() {
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    empData.sort((x, y) => x.rating - y.rating);
     const mean = d3.mean(empData.map(d => d.rating));
     const deviation = d3.deviation(empData.map(d => d.rating)) as number;
+    const grouped_data = d3.group(empData, d => d.category);
     const idealData = getProbabilityData(empData, mean, deviation);
-    const distribution = new Normal(mean, deviation);
-    // const numSamples = 10000;
-    // const samples = [];
-    // for (let i = 0; i < numSamples; i++) {
-    //   samples.push(distribution.random());
-    // }
-
-    // console.log(samples);
+    const sampleFn = d3.randomNormal(mean, deviation);
+    
 
     var x = d3.scaleLinear().range([0, width]);
-
     var y = d3.scaleLinear().range([height, 0]);
 
     const xNormal = d3.scaleLinear()
@@ -108,7 +100,6 @@ function D3Curve1() {
     //   .attr("stroke", "steelblue")
     //   .attr("d", area);
 
-    const grouped_data = d3.group(empData, d => d.category);
     let usedCount = 0;
     let index = 0;
     let prevPercent = 0;
