@@ -20,18 +20,21 @@ function BellCurve() {
 
     const tooltip = d3.select(".tooltip");
 
-    const width = 800, height = 400;
+    const width = 1200, height = 500;
     const margin = { top: 20, right: 20, bottom: 60, left: 40 };
+    const chartWidth = width + margin.left + margin.right;
+    const chartHeight = height + margin.top + margin.bottom;
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    const plot = svg.attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+    const plot = svg.attr("width", chartWidth)
+      .attr("height", chartHeight)
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     const mean = d3.mean(empData.map(d => d.rating));
     const deviation = d3.deviation(empData.map(d => d.rating)) as number;
+    // const mean = 0, deviation = 1;
     const categoryRank = {
       'C': 1,
       'B': 2,
@@ -41,7 +44,7 @@ function BellCurve() {
     }
     const grouped_data = d3.group(empData.sort((x, y) => {
       return categoryRank[x.category] - categoryRank[y.category]
-    }), d => d.category); 
+    }), d => d.category);
 
     const normalData = [];
     for (let i = mean - (3 * deviation); i < mean + (3 * deviation); i += 0.02) {
@@ -71,7 +74,7 @@ function BellCurve() {
       usedCount += numOfElementsToSlice;
       xAxisLables.push({ key, percent });
       const groupData = { data: percent_idealData, key, percent }
-     
+
       const percentGroup = plot.append("g");
       percentGroup
         .attr("class", "group_data " + key)
@@ -115,7 +118,7 @@ function BellCurve() {
         .attr("class", "group_data_label")
         .attr("text-anchor", "center")
         .attr("fill", "black")
-        .attr("y", yNormal(data.data[data.data.length-1].y) - 75)
+        .attr("y", yNormal(data.data[data.data.length - 1].y) - 75)
         .attr("dy", "1em")
         .attr("x", pos + "px")
         .style("font-size", "20px")
