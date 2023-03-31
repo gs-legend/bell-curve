@@ -48,3 +48,33 @@
 .group:hover title {
   display: inline;
 }
+
+.group_data {
+  pointer-events: all;
+}
+
+.tooltip {
+  position: absolute;
+  width: 100px;
+  background: #ccc;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.tooltip-content .categroy {
+  display: flex;
+}
+.tooltip-content .percent {
+  display: flex;
+}
+
+.axis path {
+  stroke: steelblue !important;
+  stroke-width: 2px;
+}

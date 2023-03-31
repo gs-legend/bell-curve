@@ -36,8 +36,10 @@ function D3Curve1() {
       return;
     }
 
+    const tooltip = d3.select(".tooltip");
+
     const width = 800, height = 400;
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    const margin = { top: 20, right: 20, bottom: 60, left: 40 };
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -57,19 +59,12 @@ function D3Curve1() {
     }
     const grouped_data = d3.group(empData.sort((x, y) => {
       return categoryRank[x.category] - categoryRank[y.category]
-    }), d => d.category);
-
-    const group1 = empData.filter(d => d.category === 'C');
-    const group2 = empData.filter(d => d.category === 'B');
-    const group3 = empData.filter(d => d.category === 'B+');
-    const group4 = empData.filter(d => d.category === 'A');
-    const group5 = empData.filter(d => d.category === 'A+');
+    }), d => d.category); 
 
     const normalData = [];
     for (let i = mean - (3 * deviation); i < mean + (3 * deviation); i += 0.02) {
       normalData.push({ x: i, y: probabilityDensityCalculation(i, mean, deviation) });
     }
-    // console.log(mean - (3 * deviation), mean + (3 * deviation), mean, deviation)
     var x = d3.scaleLinear().range([0, width]);
     var y = d3.scaleLinear().range([height, 0]);
 
@@ -114,82 +109,128 @@ function D3Curve1() {
       return _fill;
     }
 
-    // plot
-    //   .append('g')
-    //   .append("path")
-    //   .attr("class", "group group2")
-    //   .datum(normalData)
-    //   .attr("fill", "none")
-    //   .attr("stroke", "steelblue")
-    //   .attr("stroke-width", "1")
-    //   .attr("d", line);
-
     let usedCount = 0;
     let index = 0;
     let prevPercent = 0;
     let usedPercent = 0;
     const xAxisLables = [];
+
     grouped_data.forEach((data, key) => {
       const percent = (data.length * 100) / empData.length;
       const numOfElementsToSlice = Math.round((percent / 100) * (normalData.length));
-      let percent_idealData = normalData.slice(usedCount, usedCount + numOfElementsToSlice);
+      let percent_idealData = normalData.slice(usedCount, usedCount + numOfElementsToSlice - 2);
       usedCount += numOfElementsToSlice;
-      console.log(usedCount, numOfElementsToSlice, percent, percent_idealData,normalData.length)
-      xAxisLables.push(key);
-      // const quantile = d3.quantile(normalData.map(d => d.x), (usedPercent + percent) / 100);
-      // const prevQuantile = d3.quantile(normalData.map(d => d.x), (usedPercent + prevPercent) / 100);
-      // const temp1 = {
-      //   y: probabilityDensityCalculation(prevQuantile, mean, deviation),
-      //   x: prevQuantile,
-      //   c: key
-      // };
-
-      // const temp2 = {
-      //   y: probabilityDensityCalculation(quantile, mean, deviation),
-      //   x: quantile,
-      //   c: key
-      // }
-
-      // console.log(percent / 100, quantile, prevPercent / 100, prevQuantile, temp1, temp2);
-      // const newGroup = [temp1, ...percent_idealData, temp2];
+      xAxisLables.push({ key, percent });
+      const groupData = { data: percent_idealData, key, percent }
+     
       const percentGroup = plot.append("g");
       percentGroup
+        .attr("class", "group_data " + key)
+        .data([groupData])
         .append("path")
-        .attr("class", "group")
-        .datum(percent_idealData)
+        .datum(groupData.data)
         .attr("fill", colors[index++])
-        // .attr("fill", "none")
         .attr("d", d3.area()
           .curve(d3.curveLinear)
-          // .x((d: any) => { console.log(d, xNormal(d.q)); return xNormal(d.q); })
           .x((d: any) => xNormal(d.x))
           .y0(y(0))
-          // .y1((d: any) => { console.log(d, percent, yNormal(d.p)); return yNormal(d.p); })
           .y1((d: any) => yNormal(d.y))
-        ) 
-        .append("svg:title")
-        .attr("dx", ".35em")
-        .attr("dy", ".35em")
-        .text((d) => `Category ${key} - ${percent}%`);
+        )
+
       prevPercent = percent;
       usedPercent += percent;
     });
 
-    const xAxis = d3.axisBottom(xNormal);
-    const yAxis = d3.axisLeft(yNormal);
+    let _prevPercent = 0;
 
-    // plot.append('g')
-    //   .attr('class', 'x axis')
-    //   .attr('transform', 'translate(0,' + height + ')')
-    //   .call(xAxis);
+    plot.selectAll("g.group_data").each((d1, i, _self) => {
+      const d = _self[i];
+      const data: any = d3.select(d).data()[0];
+      const path = d3.select(d).select('path');
+      let pos = width * ((data.percent * 0.5) + _prevPercent) / 100;
 
-    // plot.append('g')
-    //   .attr('class', 'y axis')
-    //   .call(yAxis);
+      d3.select(d)
+        .append("text")
+        .attr("class", "group_data_label")
+        .attr("text-anchor", "center")
+        .attr("fill", "steelblue")
+        .attr("y", height + 40)
+        .attr("dy", "1em")
+        .attr("x", pos + "px")
+        .style("font-size", "20px")
+        .attr("transform", "translate(0,0)")
+        .text(data.key)
 
+      d3.select(d)
+        .append("text")
+        .attr("class", "group_data_label")
+        .attr("text-anchor", "center")
+        .attr("fill", "black")
+        .attr("y", yNormal(data.data[data.data.length-1].y) - 75)
+        .attr("dy", "1em")
+        .attr("x", pos + "px")
+        .style("font-size", "20px")
+        .attr("transform", "translate(0,0)")
+        .text(data.percent + "%")
+      _prevPercent += data.percent;
+
+      const toolTipContent = `
+        <div class="tooltip-content">
+          <span class="categroy">Category ${data.key} </span>
+          <span class="percent">${data.percent} % </span>
+        </div>`;
+
+      path.style('opacity', 0.8);
+      path.on("mouseover", function (event, d2) {
+        path.style('opacity', 1);
+        tooltip.transition()
+          .duration(200)
+          .style("opacity", .9);
+        tooltip.html(toolTipContent)
+          .style("left", (event.pageX) + "px")
+          .style("top", (event.pageY - 100) + "px");
+      })
+        .on("mouseout", function (d2) {
+          path.style('opacity', 0.8);
+          tooltip.transition()
+            .duration(500)
+            .style("opacity", 0)
+            .style("left", 0)
+            .style("top", 0);
+        });
+    })
+
+    const xAxis = d3.axisBottom(xNormal).ticks(0);
+    const yAxis = d3.axisLeft(yNormal).ticks(0);
+
+    plot.append('g')
+      .attr('class', 'x axis')
+      .attr('transform', 'translate(0,' + height + ')')
+      .call(xAxis)
+      .append("text")
+      .attr("class", "x label")
+      .attr("text-anchor", "center")
+      .attr("fill", "steelblue")
+      .style("font-size", "20px")
+      .attr("transform", "translate(" + width / 2 + ",25)")
+      .text("Normal Company Wide Ratings")
+
+    plot.append('g')
+      .attr('class', 'axis y-axis')
+      .call(yAxis)
+      .append("text")
+      .attr("class", "y label")
+      .attr("text-anchor", "center")
+      .attr("fill", "steelblue")
+      .style("font-size", "20px")
+      .attr("transform", "translate(-10, " + (height - 160) / 2 + ") rotate(-90)")
+      .text("No of Employees")
   }, []);
 
-  return <svg ref={svgRef}></svg>;
+  return <>
+    <svg ref={svgRef}></svg>
+    <div className="tooltip" style={{ 'opacity': '0' }}></div>
+  </>
 }
 
 export default D3Curve1
